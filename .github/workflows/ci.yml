@@ -1,0 +1,44 @@
+name: CI Workflow
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Install Maven
+        run: sudo apt-get install -y maven
+
+      - name: Display Maven version
+        run: mvn -v
+
+      - name: Download dependencies
+        run: mvn dependency:resolve
+
+      - name: Build project
+        run: mvn compile
+
+      - name: Run tests
+        run: mvn test
+
+      - name: Commit dummy update
+        run: |
+          git config --global user.name 'github-actions'
+          git config --global user.email 'actions@github.com'
+          echo "Last build: $(date)" > build-info.txt
+          git add build-info.txt
+          git commit -m "CI build info update"
+          git push
+        continue-on-error: true  # Avoid breaking the workflow if no changes
